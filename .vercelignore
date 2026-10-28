@@ -1,0 +1,3 @@
+# Tell Vercel to ignore the background scraper worker & database migrations
+scraper_worker/
+supabase/
