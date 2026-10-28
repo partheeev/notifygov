@@ -296,11 +296,11 @@ export default function OnboardingPage() {
 
             {/* Direct action links */}
             <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-              <Link href="/" className="btn-primary">
+              <Link href="/notifications" className="btn-primary" style={{ padding: '0.75rem 1.75rem', fontSize: '0.95rem' }}>
                 View My 6 Eligible Notifications &rarr;
               </Link>
-              <Link href="/notifications" className="btn-secondary">
-                Go to Alerts Inbox
+              <Link href="/" className="btn-secondary" style={{ padding: '0.75rem 1.25rem' }}>
+                Browse All Feeds
               </Link>
             </div>
           </div>

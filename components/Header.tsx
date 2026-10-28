@@ -80,9 +80,9 @@ export default function Header({ unreadCount = 5 }: HeaderProps) {
               <span>Feed</span>
               <span className="active-dot" />
             </a>
-            <a href="/status" className="nav-link">
-              <span>Sources</span>
-              <span className="nav-count-pill">10 Active</span>
+            <a href="/onboarding" className="nav-link" style={{ color: '#fbbf24' }}>
+              <span>Set Profile</span>
+              <span className="nav-count-pill" style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24' }}>Personalize</span>
             </a>
             <a href="/notifications" className="nav-link">
               <span>Alerts</span>
@@ -91,6 +91,10 @@ export default function Header({ unreadCount = 5 }: HeaderProps) {
                   {unreadCount}
                 </span>
               )}
+            </a>
+            <a href="/status" className="nav-link">
+              <span>Sources</span>
+              <span className="nav-count-pill">10 Active</span>
             </a>
           </nav>
 
@@ -121,10 +125,10 @@ export default function Header({ unreadCount = 5 }: HeaderProps) {
                 strokeLinejoin="round"
                 className="btn-bell-icon"
               >
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
               </svg>
-              <span>Get Alerts</span>
+              <span>Set Profile</span>
             </a>
           </div>
         </div>
@@ -179,6 +183,20 @@ export default function Header({ unreadCount = 5 }: HeaderProps) {
             >
               <span className="mobile-nav-label">Notification Feed</span>
               <span className="mobile-badge-live">LIVE</span>
+            </a>
+
+            <a
+              href="/onboarding"
+              className="mobile-nav-item"
+              onClick={() => setMobileMenuOpen(false)}
+              style={{ background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.28)' }}
+            >
+              <span className="mobile-nav-label" style={{ color: '#fbbf24', fontWeight: 600 }}>
+                ⭐ Set Profile &amp; Eligibility
+              </span>
+              <span className="mobile-badge-live" style={{ background: '#f59e0b', color: '#0a0d14' }}>
+                CUSTOM
+              </span>
             </a>
 
             <a
