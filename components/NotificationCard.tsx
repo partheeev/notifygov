@@ -12,6 +12,7 @@ export interface NotificationCardProps {
   summary: string;
   deadline?: string | null;
   officialUrl: string;
+  applyUrl?: string | null;
   isNew?: boolean;
   daysLeft?: number | null;
 }
@@ -24,6 +25,7 @@ export default function NotificationCard({
   summary,
   deadline,
   officialUrl,
+  applyUrl,
   isNew = false,
   daysLeft,
 }: NotificationCardProps) {
@@ -75,6 +77,19 @@ export default function NotificationCard({
   };
 
   const catMeta = getCategoryDetails(normalizedCategory);
+
+  const getActionLabel = (cat: string) => {
+    switch (cat.toLowerCase().replace(/\s+/g, '_')) {
+      case 'result':
+        return 'Check Result';
+      case 'admit_card':
+        return 'Download Admit Card';
+      case 'corrigendum':
+        return 'Direct Portal';
+      default:
+        return 'Apply Online';
+    }
+  };
 
   const handleShare = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -129,10 +144,11 @@ export default function NotificationCard({
         {/* Title */}
         <h3 className="card-title line-clamp-2">
           <a
-            href={officialUrl}
+            href={applyUrl || officialUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="title-link"
+            title={`Open ${applyUrl ? 'direct application portal' : 'official notification'}`}
           >
             {title}
           </a>
@@ -194,15 +210,42 @@ export default function NotificationCard({
               </svg>
             </button>
 
-            {/* Official Link Button */}
+            {/* Direct Apply / Action Online Portal Link (Primary) */}
+            {applyUrl ? (
+              <a
+                href={applyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-primary"
+                title={`Open verified direct ${getActionLabel(category).toLowerCase()} portal`}
+                style={{ fontSize: '0.78rem', padding: '0.42rem 0.95rem', gap: '6px' }}
+              >
+                <span>{getActionLabel(category)}</span>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ width: '12px', height: '12px' }}
+                >
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  <polyline points="15 3 21 3 21 9" />
+                  <line x1="10" y1="14" x2="21" y2="3" />
+                </svg>
+              </a>
+            ) : null}
+
+            {/* Official Notification Circular Link */}
             <a
               href={officialUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-outline view-link"
-              title="Open verified official portal link"
+              title="View verified official government gazette circular"
             >
-              <span>View Official</span>
+              <span>Official Notice</span>
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
@@ -212,9 +255,10 @@ export default function NotificationCard({
                 strokeLinejoin="round"
                 className="external-icon"
               >
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                <polyline points="15 3 21 3 21 9" />
-                <line x1="10" y1="14" x2="21" y2="3" />
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
               </svg>
             </a>
           </div>

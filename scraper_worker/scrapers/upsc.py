@@ -61,6 +61,7 @@ class UPSCScraper(BaseScraper):
                         item = ScrapedItem(
                             title=title,
                             source_url=item_url,
+                            apply_url="https://upsconline.nic.in",
                             category=category,
                             organisation="UPSC",
                             publication_date=pub_date,

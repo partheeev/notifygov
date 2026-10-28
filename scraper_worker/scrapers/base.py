@@ -27,6 +27,7 @@ class ScrapedItem:
         publication_date: Optional[str] = None,
         deadline: Optional[str] = None,
         summary: Optional[str] = None,
+        apply_url: Optional[str] = None,
         pdf_urls: Optional[List[str]] = None,
         raw_html: Optional[str] = None,
     ):
@@ -38,6 +39,7 @@ class ScrapedItem:
         self.publication_date = publication_date
         self.deadline = deadline
         self.summary = summary
+        self.apply_url = apply_url
         self.pdf_urls = pdf_urls or []
         self.raw_html = raw_html
 
@@ -45,6 +47,7 @@ class ScrapedItem:
         return {
             "title": self.title,
             "source_url": self.source_url,
+            "apply_url": self.apply_url,
             "category": self.category,
             "organisation": self.organisation,
             "external_id": self.external_id,

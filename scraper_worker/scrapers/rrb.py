@@ -49,6 +49,7 @@ class RRBScraper(BaseScraper):
                         ScrapedItem(
                             title=text,
                             source_url=item_url,
+                            apply_url="https://www.rrbapply.gov.in",
                             category=category,
                             organisation="RRB",
                             summary=f"Railway Recruitment Board announcement: {text}. Verified from Ministry of Railways portal.",

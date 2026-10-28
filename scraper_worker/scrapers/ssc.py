@@ -65,6 +65,7 @@ class SSCScraper(BaseScraper):
                     ScrapedItem(
                         title=title,
                         source_url=item_url,
+                        apply_url="https://ssc.gov.in/login",
                         category=category,
                         organisation="SSC",
                         publication_date=pub_date,

@@ -73,6 +73,7 @@ CREATE TABLE notifications (
   -- 'exam' | 'recruitment' | 'result' | 'admit_card' | 'corrigendum' | 'syllabus'
   summary               TEXT,           -- AI-generated plain English summary
   official_url          TEXT NOT NULL,  -- Link to original official page or PDF
+  apply_url             TEXT,           -- Direct application portal / registration link (e.g. upsconline.nic.in, ssc.gov.in/login, rrbapply.gov.in)
   published_at          TIMESTAMPTZ,    -- Date on the official document (may be NULL if unverifiable)
   first_seen_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   last_checked_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),

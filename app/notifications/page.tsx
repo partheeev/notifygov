@@ -13,7 +13,9 @@ interface AlertItem {
   timestamp: string;
   matchReason?: string;
   summary: string;
-  url: string;
+  url?: string;
+  officialUrl: string;
+  applyUrl?: string;
   isRead: boolean;
   daysLeft?: number;
 }
@@ -28,7 +30,8 @@ const SAMPLE_ALERTS: AlertItem[] = [
     timestamp: '3 hours ago',
     matchReason: 'Matched: Any Degree / Graduation • Age 21-32 yrs',
     summary: 'Union Public Service Commission has officially notified the CSE 2026. Preliminary exam date, syllabus, and vacancies confirmed.',
-    url: 'https://upsc.gov.in',
+    officialUrl: 'https://upsc.gov.in/examinations/active-examinations',
+    applyUrl: 'https://upsconline.nic.in',
     isRead: false,
     daysLeft: 42,
   },
@@ -40,7 +43,8 @@ const SAMPLE_ALERTS: AlertItem[] = [
     timestamp: '5 hours ago',
     matchReason: 'Matched: Bachelor’s Degree • Age relaxation applied',
     summary: 'Staff Selection Commission announces Combined Graduate Level recruitment across Central Ministries, CBIC, and CAG.',
-    url: 'https://ssc.gov.in',
+    officialUrl: 'https://ssc.gov.in/notices',
+    applyUrl: 'https://ssc.gov.in/login',
     isRead: false,
     daysLeft: 22,
   },
@@ -52,7 +56,8 @@ const SAMPLE_ALERTS: AlertItem[] = [
     timestamp: '1 day ago',
     matchReason: 'Matched: Engineering Degree / Diploma',
     summary: 'Centralized Employment Notice (CEN) for Junior Engineers in Civil, Mechanical, and Electrical divisions across Indian Railways.',
-    url: 'https://indianrailways.gov.in',
+    officialUrl: 'https://indianrailways.gov.in/railwayboard/view_section.jsp?lang=0&id=0,4,1244',
+    applyUrl: 'https://www.rrbapply.gov.in',
     isRead: false,
     daysLeft: 5,
   },
@@ -64,7 +69,8 @@ const SAMPLE_ALERTS: AlertItem[] = [
     timestamp: '2 days ago',
     matchReason: 'Matched: Graduation in any discipline',
     summary: 'Recruitment for Probationary Officers in 11 participating public sector banks including PNB, Bank of Baroda, and Canara Bank.',
-    url: 'https://ibps.in',
+    officialUrl: 'https://www.ibps.in/index.php/crp-po-mt-xiv/',
+    applyUrl: 'https://ibpsonline.ibps.in',
     isRead: true,
     daysLeft: 28,
   },
@@ -78,7 +84,8 @@ const SAMPLE_ALERTS: AlertItem[] = [
     timestamp: '4 hours ago',
     matchReason: 'Your Target Exam: UGC NET / Teaching',
     summary: 'National Testing Agency has activated the download link for exam city intimation and official hall tickets. Check shift timing and exam center.',
-    url: 'https://nta.ac.in',
+    officialUrl: 'https://ugcnet.nta.ac.in',
+    applyUrl: 'https://ugcnet.ntaonline.in',
     isRead: false,
   },
   {
@@ -89,7 +96,8 @@ const SAMPLE_ALERTS: AlertItem[] = [
     timestamp: '1 day ago',
     matchReason: 'Your Target Exam: SSC CHSL',
     summary: 'Candidates shortlisted for Tier-II descriptive and typing tests can download their admit card using Roll Number and Date of Birth.',
-    url: 'https://ssc.gov.in',
+    officialUrl: 'https://ssc.gov.in/notices',
+    applyUrl: 'https://ssc.gov.in/login',
     isRead: true,
   },
 
@@ -102,7 +110,8 @@ const SAMPLE_ALERTS: AlertItem[] = [
     timestamp: '6 hours ago',
     matchReason: 'Your Target Exam: SSC CGL',
     summary: 'Category-wise cutoff marks published. 1,42,000 candidates qualified for Tier-II examination. Scorecards available until end of month.',
-    url: 'https://ssc.gov.in',
+    officialUrl: 'https://ssc.gov.in/notices',
+    applyUrl: 'https://ssc.gov.in/results',
     isRead: false,
   },
   {
@@ -113,7 +122,8 @@ const SAMPLE_ALERTS: AlertItem[] = [
     timestamp: '2 days ago',
     matchReason: 'Your Target Exam: Banking Exams',
     summary: 'State-wise provisional allotment list published under the reserve list for Customer Service Associates.',
-    url: 'https://ibps.in',
+    officialUrl: 'https://www.ibps.in',
+    applyUrl: 'https://ibpsonline.ibps.in',
     isRead: true,
   },
 
@@ -126,7 +136,8 @@ const SAMPLE_ALERTS: AlertItem[] = [
     timestamp: '2 hours ago',
     matchReason: 'Action Required: High server rush expected',
     summary: 'Last date for online registration and payment fee is fast approaching. Submit documents early to avoid payment gateway congestion.',
-    url: 'https://indianrailways.gov.in',
+    officialUrl: 'https://indianrailways.gov.in/railwayboard/view_section.jsp?lang=0&id=0,4,1244',
+    applyUrl: 'https://www.rrbapply.gov.in',
     isRead: false,
     daysLeft: 5,
   },
@@ -138,7 +149,8 @@ const SAMPLE_ALERTS: AlertItem[] = [
     timestamp: '18 hours ago',
     matchReason: 'Revision to your target exam',
     summary: 'Commission has added 4 new examination sub-centers in Maharashtra and Karnataka for Preliminary test centers selection.',
-    url: 'https://upsc.gov.in',
+    officialUrl: 'https://upsc.gov.in/examinations/active-examinations',
+    applyUrl: 'https://upsconline.nic.in',
     isRead: false,
   },
 ];
@@ -447,10 +459,11 @@ export default function NotificationsPage() {
               {/* Title */}
               <h3 style={{ fontSize: '1.02rem', fontWeight: 600, color: '#f8fafc', marginBottom: '0.45rem', lineHeight: 1.4 }}>
                 <a
-                  href={item.url}
+                  href={item.applyUrl || item.officialUrl || item.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ color: 'inherit', transition: 'color 0.15s ease' }}
+                  title={`Open ${item.applyUrl ? 'direct application portal' : 'official notification'}`}
                 >
                   {item.title}
                 </a>
@@ -491,20 +504,50 @@ export default function NotificationsPage() {
                   )}
                 </div>
 
-                <a
-                  href={item.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-outline"
-                  style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem', gap: '5px' }}
-                >
-                  <span>View Official Notification</span>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '12px', height: '12px' }}>
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                    <polyline points="15 3 21 3 21 9" />
-                    <line x1="10" y1="14" x2="21" y2="3" />
-                  </svg>
-                </a>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  {item.applyUrl && (
+                    <a
+                      href={item.applyUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-primary"
+                      style={{ fontSize: '0.78rem', padding: '0.4rem 0.95rem', gap: '6px', fontWeight: 600 }}
+                      title="Open verified direct application registration portal"
+                    >
+                      <span>
+                        {item.type === 'result'
+                          ? 'Check Result'
+                          : item.type === 'admit_card'
+                          ? 'Download Admit Card'
+                          : item.type === 'corrigendum'
+                          ? 'Direct Portal'
+                          : 'Apply Online'}
+                      </span>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: '12px', height: '12px' }}>
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                        <polyline points="15 3 21 3 21 9" />
+                        <line x1="10" y1="14" x2="21" y2="3" />
+                      </svg>
+                    </a>
+                  )}
+
+                  <a
+                    href={item.officialUrl || item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-outline"
+                    style={{ fontSize: '0.78rem', padding: '0.4rem 0.85rem', gap: '5px' }}
+                    title="View official government notice circular"
+                  >
+                    <span>Official Notice</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '12px', height: '12px' }}>
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                      <line x1="16" y1="13" x2="8" y2="13" />
+                      <line x1="16" y1="17" x2="8" y2="17" />
+                    </svg>
+                  </a>
+                </div>
               </div>
             </article>
           ))

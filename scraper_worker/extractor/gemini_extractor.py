@@ -50,6 +50,7 @@ Respond ONLY with a JSON object adhering to this exact schema:
     "reserved": integer or null,
     "female": integer or null
   },
+  "apply_url": "string or null (direct candidate application portal link if mentioned in text, e.g. upsconline.nic.in, ssc.gov.in/login, rrbapply.gov.in)",
   "is_corrigendum": boolean,
   "corrigendum_summary": "string or null",
   "plain_english_summary": "2-3 concise paragraphs summarizing what candidates need to know in simple words.",

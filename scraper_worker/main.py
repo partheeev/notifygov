@@ -149,6 +149,7 @@ def run_scraper_job():
                         )
 
                         # 4. Insert notification
+                        apply_target = getattr(item, "apply_url", None) or ai_result.get("apply_url")
                         notif_payload = {
                             "source_id": source_id,
                             "document_id": doc_id,
@@ -156,6 +157,8 @@ def run_scraper_job():
                             "summary": ai_result.get("plain_english_summary") or item.summary,
                             "category": ai_result.get("category") or item.category,
                             "source_url": item.source_url,
+                            "official_url": item.source_url,
+                            "apply_url": apply_target,
                             "content_hash": content_hash,
                             "is_verified": True,
                             "status": notif_status,

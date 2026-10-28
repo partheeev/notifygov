@@ -17,7 +17,8 @@ const MOCK_NOTIFICATIONS = [
     summary:
       'Union Public Service Commission has released the notification for Civil Services (Preliminary) Examination 2026. Total vacancies: 979. Eligibility: Graduation in any discipline. Age limit: 21-32 years (relaxation for reserved categories).',
     deadline: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(),
-    officialUrl: 'https://upsc.gov.in',
+    officialUrl: 'https://upsc.gov.in/examinations/active-examinations',
+    applyUrl: 'https://upsconline.nic.in',
     isNew: true,
     daysLeft: 45,
   },
@@ -29,7 +30,8 @@ const MOCK_NOTIFICATIONS = [
     summary:
       'Staff Selection Commission announces Combined Graduate Level Examination 2026. Vacancies: 17,727 across Group B and C posts. Qualification: Any degree. Age: 18-32 years.',
     deadline: new Date(Date.now() + 22 * 24 * 60 * 60 * 1000).toISOString(),
-    officialUrl: 'https://ssc.gov.in',
+    officialUrl: 'https://ssc.gov.in/notices',
+    applyUrl: 'https://ssc.gov.in/login',
     isNew: true,
     daysLeft: 22,
   },
@@ -41,7 +43,8 @@ const MOCK_NOTIFICATIONS = [
     summary:
       'Railway Recruitment Boards invite applications for Junior Engineer posts across all departments. Qualification: Diploma/BE/BTech in relevant engineering discipline. Approx. 7,000+ vacancies.',
     deadline: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString(),
-    officialUrl: 'https://indianrailways.gov.in',
+    officialUrl: 'https://indianrailways.gov.in/railwayboard/view_section.jsp?lang=0&id=0,4,1244',
+    applyUrl: 'https://www.rrbapply.gov.in',
     isNew: false,
     daysLeft: 6,
   },
@@ -53,7 +56,8 @@ const MOCK_NOTIFICATIONS = [
     summary:
       'IBPS announces recruitment of Probationary Officers across 11 participating public sector banks. Vacancies: 4,455. Qualification: Graduation. Age: 20-30 years.',
     deadline: new Date(Date.now() + 31 * 24 * 60 * 60 * 1000).toISOString(),
-    officialUrl: 'https://ibps.in',
+    officialUrl: 'https://www.ibps.in/index.php/crp-po-mt-xiv/',
+    applyUrl: 'https://ibpsonline.ibps.in',
     isNew: false,
     daysLeft: 31,
   },
@@ -65,7 +69,8 @@ const MOCK_NOTIFICATIONS = [
     summary:
       'Combined Higher Secondary Level Examination 2025 results have been declared on the official SSC website. Candidates can check their results using Roll Number and Date of Birth.',
     deadline: null,
-    officialUrl: 'https://ssc.gov.in',
+    officialUrl: 'https://ssc.gov.in/notices',
+    applyUrl: 'https://ssc.gov.in/results',
     isNew: true,
     daysLeft: null,
   },
@@ -77,7 +82,8 @@ const MOCK_NOTIFICATIONS = [
     summary:
       'National Testing Agency has released admit cards for UGC NET December 2025 examination. Download from the official portal using Application Number and Date of Birth.',
     deadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-    officialUrl: 'https://nta.ac.in',
+    officialUrl: 'https://ugcnet.nta.ac.in',
+    applyUrl: 'https://ugcnet.ntaonline.in',
     isNew: true,
     daysLeft: 3,
   },
@@ -89,7 +95,8 @@ const MOCK_NOTIFICATIONS = [
     summary:
       'Indian Space Research Organisation invites applications for Scientist/Engineer SC posts. Qualification: First class BE/BTech in relevant discipline. 200 vacancies across multiple departments.',
     deadline: new Date(Date.now() + 18 * 24 * 60 * 60 * 1000).toISOString(),
-    officialUrl: 'https://isro.gov.in',
+    officialUrl: 'https://www.isro.gov.in/CurrentOpportunities.html',
+    applyUrl: 'https://www.isro.gov.in/CurrentOpportunities.html',
     isNew: false,
     daysLeft: 18,
   },
@@ -101,7 +108,8 @@ const MOCK_NOTIFICATIONS = [
     summary:
       'Food Corporation of India announces recruitment for Assistant Grade III (General/Accounts/Technical/Depot) posts. Qualification: Graduation/BSc Agriculture/BTech. State-wise openings available.',
     deadline: new Date(Date.now() + 55 * 24 * 60 * 60 * 1000).toISOString(),
-    officialUrl: 'https://fci.gov.in',
+    officialUrl: 'https://fci.gov.in/recruitment.php',
+    applyUrl: 'https://fci.gov.in/recruitment.php',
     isNew: false,
     daysLeft: 55,
   },
@@ -113,7 +121,8 @@ const MOCK_NOTIFICATIONS = [
     summary:
       'Defence R&D Organisation Centre for Personnel Talent Management announces recruitment for MTS posts. Qualification: 10th pass with ITI/Matriculation. 1,901 vacancies.',
     deadline: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000).toISOString(),
-    officialUrl: 'https://drdo.gov.in',
+    officialUrl: 'https://www.drdo.gov.in/careers',
+    applyUrl: 'https://rac.gov.in',
     isNew: false,
     daysLeft: 12,
   },
@@ -125,7 +134,8 @@ const MOCK_NOTIFICATIONS = [
     summary:
       'State Bank of India announces 600 vacancies for Probationary Officer posts. Qualification: Graduation in any discipline from a recognised University. Age: 21-30 years.',
     deadline: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000).toISOString(),
-    officialUrl: 'https://bank.sbi',
+    officialUrl: 'https://bank.sbi/web/careers/current-openings',
+    applyUrl: 'https://bank.sbi/web/careers/current-openings',
     isNew: false,
     daysLeft: 28,
   },
