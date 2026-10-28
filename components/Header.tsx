@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { getSavedProfile, CandidateProfile } from '@/lib/profile';
 
 export interface HeaderProps {
   unreadCount?: number;
@@ -9,6 +10,16 @@ export interface HeaderProps {
 export default function Header({ unreadCount = 5 }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [userProfile, setUserProfile] = useState<CandidateProfile | null>(null);
+
+  useEffect(() => {
+    setUserProfile(getSavedProfile());
+    const handleUpdate = () => {
+      setUserProfile(getSavedProfile());
+    };
+    window.addEventListener('notifygov_profile_updated', handleUpdate);
+    return () => window.removeEventListener('notifygov_profile_updated', handleUpdate);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -80,10 +91,17 @@ export default function Header({ unreadCount = 5 }: HeaderProps) {
               <span>Feed</span>
               <span className="active-dot" />
             </a>
-            <a href="/onboarding" className="nav-link" style={{ color: '#fbbf24' }}>
-              <span>Set Profile</span>
-              <span className="nav-count-pill" style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24' }}>Personalize</span>
-            </a>
+            {userProfile ? (
+              <a href="/onboarding" className="nav-link" style={{ color: '#34d399' }} title="Your eligibility profile is active">
+                <span>My Profile</span>
+                <span className="nav-count-pill" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399' }}>✓ Active</span>
+              </a>
+            ) : (
+              <a href="/onboarding" className="nav-link" style={{ color: '#fbbf24' }}>
+                <span>Set Profile</span>
+                <span className="nav-count-pill" style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24' }}>Personalize</span>
+              </a>
+            )}
             <a href="/notifications" className="nav-link">
               <span>Alerts</span>
               {unreadCount > 0 && (
@@ -115,21 +133,33 @@ export default function Header({ unreadCount = 5 }: HeaderProps) {
               Sign In
             </a>
 
-            <a href="/onboarding" className="btn-primary get-alerts-btn">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="btn-bell-icon"
+            {userProfile ? (
+              <a
+                href="/onboarding"
+                className="btn-secondary"
+                style={{ fontSize: '0.82rem', padding: '0.45rem 0.95rem', gap: '6px' }}
+                title={`Active profile: ${userProfile.qualification} (${userProfile.category})`}
               >
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-              <span>Set Profile</span>
-            </a>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 8px #10b981' }} />
+                <span>My Profile</span>
+              </a>
+            ) : (
+              <a href="/onboarding" className="btn-primary get-alerts-btn">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="btn-bell-icon"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                <span>Set Profile</span>
+              </a>
+            )}
           </div>
         </div>
       </header>
@@ -185,19 +215,35 @@ export default function Header({ unreadCount = 5 }: HeaderProps) {
               <span className="mobile-badge-live">LIVE</span>
             </a>
 
-            <a
-              href="/onboarding"
-              className="mobile-nav-item"
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.28)' }}
-            >
-              <span className="mobile-nav-label" style={{ color: '#fbbf24', fontWeight: 600 }}>
-                ⭐ Set Profile &amp; Eligibility
-              </span>
-              <span className="mobile-badge-live" style={{ background: '#f59e0b', color: '#0a0d14' }}>
-                CUSTOM
-              </span>
-            </a>
+            {userProfile ? (
+              <a
+                href="/onboarding"
+                className="mobile-nav-item"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.28)' }}
+              >
+                <span className="mobile-nav-label" style={{ color: '#34d399', fontWeight: 600 }}>
+                  ✓ My Profile ({userProfile.qualification.split(' ')[0]})
+                </span>
+                <span className="mobile-badge-live" style={{ background: '#10b981', color: '#0a0d14' }}>
+                  ACTIVE
+                </span>
+              </a>
+            ) : (
+              <a
+                href="/onboarding"
+                className="mobile-nav-item"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.28)' }}
+              >
+                <span className="mobile-nav-label" style={{ color: '#fbbf24', fontWeight: 600 }}>
+                  ⭐ Set Profile &amp; Eligibility
+                </span>
+                <span className="mobile-badge-live" style={{ background: '#f59e0b', color: '#0a0d14' }}>
+                  CUSTOM
+                </span>
+              </a>
+            )}
 
             <a
               href="/status"
@@ -239,17 +285,27 @@ export default function Header({ unreadCount = 5 }: HeaderProps) {
         </div>
 
         <div className="drawer-footer">
-          <a
-            href="/onboarding"
-            className="btn-primary mobile-cta-btn"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="btn-bell-icon">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-            </svg>
-            <span>Subscribe for Free Alerts</span>
-          </a>
+          {userProfile ? (
+            <a
+              href="/notifications"
+              className="btn-primary mobile-cta-btn"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <span>View My Eligible Alerts &rarr;</span>
+            </a>
+          ) : (
+            <a
+              href="/onboarding"
+              className="btn-primary mobile-cta-btn"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="btn-bell-icon">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+              <span>Set Profile for Free Alerts</span>
+            </a>
+          )}
         </div>
       </aside>
     </>

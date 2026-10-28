@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getSavedProfile, saveProfile, clearProfile, CandidateProfile } from '@/lib/profile';
 
 interface CandidateProfileState {
   qualification: string;
@@ -57,6 +58,12 @@ const TARGET_EXAMS = [
 
 export default function OnboardingPage() {
   const [step, setStep] = useState(1);
+  const [isEditing, setIsEditing] = useState(false);
+  const [hasSavedProfile, setHasSavedProfile] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(false);
+
   const [profile, setProfile] = useState<CandidateProfileState>({
     qualification: 'Graduation (Any Discipline)',
     discipline: 'General / Non-Technical',
@@ -65,12 +72,25 @@ export default function OnboardingPage() {
     state: 'Delhi (NCT)',
     targetExams: ['UPSC Civil Services (IAS/IPS)', 'SSC CGL (Group B/C)'],
   });
-  const [saved, setSaved] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  const [authLoading, setAuthLoading] = useState(false);
 
-  // Check if user is already signed in
+  // Restore saved profile from localStorage / persistent cookie on mount
   useEffect(() => {
+    const existing = getSavedProfile();
+    if (existing) {
+      setProfile({
+        qualification: existing.qualification || 'Graduation (Any Discipline)',
+        discipline: existing.discipline || 'General / Non-Technical',
+        age: existing.age || 24,
+        category: existing.category || 'General',
+        state: existing.state || 'Delhi (NCT)',
+        targetExams: existing.targetExams && existing.targetExams.length > 0
+          ? existing.targetExams
+          : ['UPSC Civil Services (IAS/IPS)', 'SSC CGL (Group B/C)'],
+      });
+      setHasSavedProfile(true);
+    }
+
+    // Check if Supabase user is logged in
     if (supabase) {
       supabase.auth.getUser().then(({ data }) => {
         if (data?.user) {
@@ -91,12 +111,12 @@ export default function OnboardingPage() {
   };
 
   const handleFinish = async () => {
-    // 1. Save to local storage
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('notifygov_user_profile', JSON.stringify(profile));
-    }
+    // 1. Save to both localStorage and 1-year cookie
+    saveProfile(profile);
+    setHasSavedProfile(true);
+    setIsEditing(false);
 
-    // 2. If user already logged in, save to Supabase user_profiles table
+    // 2. If user already logged in via Supabase, sync to cloud user_profiles
     if (supabase && currentUser) {
       try {
         await supabase
@@ -118,19 +138,37 @@ export default function OnboardingPage() {
     setSaved(true);
   };
 
+  const handleResetProfile = () => {
+    if (confirm('Reset your saved eligibility profile?')) {
+      clearProfile();
+      setHasSavedProfile(false);
+      setIsEditing(true);
+      setStep(1);
+      setProfile({
+        qualification: 'Graduation (Any Discipline)',
+        discipline: 'General / Non-Technical',
+        age: 24,
+        category: 'General',
+        state: 'Delhi (NCT)',
+        targetExams: ['UPSC Civil Services (IAS/IPS)', 'SSC CGL (Group B/C)'],
+      });
+    }
+  };
+
   const handleGoogleLogin = async () => {
+    if (!isSupabaseConfigured || !supabase) {
+      alert('Cloud sign-in requires Supabase environment variables configured in Vercel. Your profile is already safely stored on this device!');
+      return;
+    }
+
     setAuthLoading(true);
     try {
-      if (supabase) {
-        await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: `${window.location.origin}/`,
-          },
-        });
-      } else {
-        window.location.href = '/login';
-      }
+      await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/notifications`,
+        },
+      });
     } catch (err) {
       console.error('Google auth error:', err);
       setAuthLoading(false);
@@ -150,25 +188,167 @@ export default function OnboardingPage() {
           Set your qualifications once. NotifyGov filters 100+ daily circulars and alerts you only when you are 100% eligible.
         </p>
 
-        {/* Step indicator */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '1.5rem' }}>
-          {[1, 2, 3].map((s) => (
-            <div
-              key={s}
-              style={{
-                width: '40px',
-                height: '4px',
-                borderRadius: '9999px',
-                background: s <= step ? '#f59e0b' : 'rgba(255, 255, 255, 0.12)',
-                transition: 'background 0.2s ease',
-              }}
-            />
-          ))}
-        </div>
+        {/* Step indicator (only visible when in wizard mode) */}
+        {(!hasSavedProfile || isEditing) && !saved && (
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '1.5rem' }}>
+            {[1, 2, 3].map((s) => (
+              <div
+                key={s}
+                style={{
+                  width: '40px',
+                  height: '4px',
+                  borderRadius: '9999px',
+                  background: s <= step ? '#f59e0b' : 'rgba(255, 255, 255, 0.12)',
+                  transition: 'background 0.2s ease',
+                }}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="glass-card" style={{ padding: '2rem' }}>
-        {saved ? (
+        {/* CASE 1: Profile already saved, viewing status */}
+        {hasSavedProfile && !isEditing && !saved && (
+          <div style={{ textAlign: 'center', padding: '1rem 0.5rem' }}>
+            <div
+              style={{
+                width: '60px',
+                height: '60px',
+                borderRadius: '50%',
+                background: 'rgba(16, 185, 129, 0.15)',
+                border: '1px solid rgba(16, 185, 129, 0.35)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 1.25rem',
+                color: '#10b981',
+              }}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: '28px', height: '28px' }}>
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '0.6rem' }}>
+              <span className="dot-live" />
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Active Profile Saved on This Device
+              </span>
+            </div>
+
+            <h2 style={{ fontSize: '1.6rem', fontWeight: 700, color: '#f8fafc', marginBottom: '0.5rem' }}>
+              Your Eligibility Is Configured
+            </h2>
+            <p style={{ color: '#94a3b8', fontSize: '0.92rem', maxWidth: '480px', margin: '0 auto 1.75rem', lineHeight: 1.5 }}>
+              You don&apos;t need to sign in every time. Your degree and age criteria are permanently active in this browser.
+            </p>
+
+            {/* Profile Overview Card */}
+            <div
+              style={{
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: '14px',
+                padding: '1.25rem 1.5rem',
+                textAlign: 'left',
+                maxWidth: '520px',
+                margin: '0 auto 2rem',
+              }}
+            >
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                <div>
+                  <span style={{ fontSize: '0.74rem', color: '#64748b', textTransform: 'uppercase', display: 'block', fontWeight: 600 }}>
+                    Qualification
+                  </span>
+                  <span style={{ fontSize: '0.92rem', color: '#f8fafc', fontWeight: 600 }}>
+                    {profile.qualification}
+                  </span>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.74rem', color: '#64748b', textTransform: 'uppercase', display: 'block', fontWeight: 600 }}>
+                    Stream / Branch
+                  </span>
+                  <span style={{ fontSize: '0.92rem', color: '#f8fafc', fontWeight: 600 }}>
+                    {profile.discipline}
+                  </span>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.74rem', color: '#64748b', textTransform: 'uppercase', display: 'block', fontWeight: 600 }}>
+                    Age &amp; Category
+                  </span>
+                  <span style={{ fontSize: '0.92rem', color: '#f8fafc', fontWeight: 600 }}>
+                    {profile.age} years • {profile.category}
+                  </span>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.74rem', color: '#64748b', textTransform: 'uppercase', display: 'block', fontWeight: 600 }}>
+                    Target Exams
+                  </span>
+                  <span style={{ fontSize: '0.92rem', color: '#fbbf24', fontWeight: 600 }}>
+                    {profile.targetExams.length} selected
+                  </span>
+                </div>
+              </div>
+
+              {profile.targetExams.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', paddingTop: '0.75rem', borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                  {profile.targetExams.map((ex) => (
+                    <span
+                      key={ex}
+                      style={{
+                        fontSize: '0.74rem',
+                        padding: '2px 8px',
+                        borderRadius: '6px',
+                        background: 'rgba(59, 130, 246, 0.15)',
+                        color: '#93c5fd',
+                        border: '1px solid rgba(59, 130, 246, 0.25)',
+                      }}
+                    >
+                      {ex}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.85rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <Link href="/notifications" className="btn-primary" style={{ padding: '0.75rem 1.6rem', fontSize: '0.92rem' }}>
+                View 6 Eligible Matches &rarr;
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsEditing(true);
+                  setStep(1);
+                }}
+                className="btn-secondary"
+                style={{ padding: '0.75rem 1.25rem', fontSize: '0.92rem' }}
+              >
+                Modify Preferences
+              </button>
+              <button
+                type="button"
+                onClick={handleResetProfile}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#64748b',
+                  fontSize: '0.8rem',
+                  textDecoration: 'underline',
+                  cursor: 'pointer',
+                  padding: '0.5rem',
+                }}
+              >
+                Reset Profile
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* CASE 2: Just clicked save confirmation */}
+        {saved && (
           <div style={{ textAlign: 'center', padding: '1.5rem 1rem' }}>
             <div
               style={{
@@ -190,107 +370,53 @@ export default function OnboardingPage() {
             </div>
 
             <h2 style={{ fontSize: '1.55rem', fontWeight: 700, color: '#f8fafc', marginBottom: '0.4rem' }}>
-              Profile Setup Complete!
+              Profile Successfully Saved!
             </h2>
             <p style={{ color: '#94a3b8', fontSize: '0.94rem', maxWidth: '480px', margin: '0 auto 1.5rem', lineHeight: 1.5 }}>
-              Matched against active circulars: you qualify for{' '}
+              Your qualifications are stored on this device. You qualify for{' '}
               <strong style={{ color: '#34d399' }}>6 central government recruitment drives</strong> right now!
             </p>
 
-            {/* High-Converting Sync / Sign-in Prompt if user is a guest */}
-            {!currentUser ? (
+            <div
+              style={{
+                background: 'rgba(16, 185, 129, 0.08)',
+                border: '1px solid rgba(16, 185, 129, 0.25)',
+                borderRadius: '12px',
+                padding: '1rem',
+                maxWidth: '480px',
+                margin: '0 auto 1.75rem',
+                color: '#34d399',
+                fontSize: '0.86rem',
+                fontWeight: 600,
+              }}
+            >
+              ✓ Saved permanently via browser storage &amp; cookies. No sign-in required!
+            </div>
+
+            {/* Optional Google Sync (only rendered if Supabase keys are active) */}
+            {isSupabaseConfigured && !currentUser && (
               <div
                 style={{
                   background: 'rgba(245, 158, 11, 0.08)',
                   border: '1px solid rgba(245, 158, 11, 0.28)',
                   borderRadius: '14px',
-                  padding: '1.5rem',
+                  padding: '1.25rem',
                   maxWidth: '520px',
                   margin: '0 auto 2rem',
-                  textAlign: 'center',
                 }}
               >
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '0.5rem' }}>
-                  <span className="dot-live" />
-                  <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    Protect &amp; Sync Your Matches
-                  </span>
-                </div>
-
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#f8fafc', marginBottom: '0.35rem' }}>
-                  Sync your profile to your phone &amp; activate instant alerts
-                </h3>
-                <p style={{ fontSize: '0.84rem', color: '#cbd5e1', lineHeight: 1.5, marginBottom: '1.25rem' }}>
-                  Don&apos;t lose your 6 eligible job matches if you close this tab. Sign in to sync across your phone and get alerted the minute a new vacancy is published.
+                <p style={{ fontSize: '0.84rem', color: '#cbd5e1', marginBottom: '1rem' }}>
+                  Want to sync across multiple phones? Sign in with Google:
                 </p>
-
-                {/* 1-Tap Google Button */}
                 <button
                   type="button"
                   onClick={handleGoogleLogin}
                   disabled={authLoading}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '10px',
-                    padding: '0.75rem 1.5rem',
-                    borderRadius: '10px',
-                    background: '#ffffff',
-                    color: '#0a0d14',
-                    fontWeight: 600,
-                    fontSize: '0.92rem',
-                    cursor: 'pointer',
-                    boxShadow: '0 4px 14px rgba(0, 0, 0, 0.4)',
-                    border: 'none',
-                    transition: 'all 0.15s ease',
-                    marginBottom: '0.85rem',
-                    width: '100%',
-                    maxWidth: '320px',
-                  }}
+                  className="btn-secondary"
+                  style={{ fontSize: '0.86rem' }}
                 >
-                  <svg viewBox="0 0 24 24" style={{ width: '18px', height: '18px' }}>
-                    <path
-                      fill="#4285F4"
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    />
-                    <path
-                      fill="#34A853"
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    />
-                    <path
-                      fill="#FBBC05"
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                    />
-                    <path
-                      fill="#EA4335"
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                    />
-                  </svg>
-                  <span>{authLoading ? 'Connecting...' : 'Save & Sync with Google'}</span>
+                  {authLoading ? 'Connecting...' : 'Sync with Google'}
                 </button>
-
-                <div>
-                  <Link href="/login" style={{ fontSize: '0.8rem', color: '#94a3b8', textDecoration: 'underline' }}>
-                    or sign in with Email magic link
-                  </Link>
-                </div>
-              </div>
-            ) : (
-              <div
-                style={{
-                  background: 'rgba(16, 185, 129, 0.08)',
-                  border: '1px solid rgba(16, 185, 129, 0.25)',
-                  borderRadius: '12px',
-                  padding: '1rem',
-                  maxWidth: '480px',
-                  margin: '0 auto 1.75rem',
-                  color: '#34d399',
-                  fontSize: '0.86rem',
-                  fontWeight: 600,
-                }}
-              >
-                ✓ Synced to your account ({currentUser.email}). Your eligible matches are active across all your devices.
               </div>
             )}
 
@@ -304,7 +430,10 @@ export default function OnboardingPage() {
               </Link>
             </div>
           </div>
-        ) : (
+        )}
+
+        {/* CASE 3: Wizard Mode (New candidate or Editing) */}
+        {(!hasSavedProfile || isEditing) && !saved && (
           <>
             {/* Step 1: Qualification & Discipline */}
             {step === 1 && (
@@ -365,7 +494,17 @@ export default function OnboardingPage() {
                   </select>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <div style={{ display: 'flex', justifyContent: isEditing ? 'space-between' : 'flex-end', alignItems: 'center' }}>
+                  {isEditing && (
+                    <button
+                      type="button"
+                      className="btn-ghost"
+                      onClick={() => setIsEditing(false)}
+                      style={{ fontSize: '0.84rem' }}
+                    >
+                      Cancel
+                    </button>
+                  )}
                   <button type="button" className="btn-primary" onClick={() => setStep(2)}>
                     Next: Age &amp; Category &rarr;
                   </button>

@@ -7,6 +7,7 @@ import FilterBar from '@/components/FilterBar';
 import NotificationFeed from '@/components/NotificationFeed';
 import SourceBadge from '@/components/SourceBadge';
 import PushNotificationBanner from '@/components/PushNotificationBanner';
+import { getSavedProfile, saveProfile, CandidateProfile } from '@/lib/profile';
 
 const MOCK_NOTIFICATIONS = [
   {
@@ -160,16 +161,24 @@ export default function HomePage() {
   const [hoursCount, setHoursCount] = useState(0);
   const [aspirantsCount, setAspirantsCount] = useState(0);
 
-  // Check saved profile on mount
+  // Check saved profile on mount and listen for real-time updates
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const p = localStorage.getItem('notifygov_user_profile');
-      if (p) {
-        try {
-          setSavedProfile(JSON.parse(p));
-        } catch {}
-      }
+    const p = getSavedProfile();
+    if (p) {
+      setSavedProfile(p);
+      if (p.qualification) setQuickQual(p.qualification);
+      if (p.age) setQuickAge(p.age);
+      if (p.category) setQuickCat(p.category);
     }
+    const handleUpdate = () => {
+      const updated = getSavedProfile();
+      setSavedProfile(updated);
+      if (updated?.qualification) setQuickQual(updated.qualification);
+      if (updated?.age) setQuickAge(updated.age);
+      if (updated?.category) setQuickCat(updated.category);
+    };
+    window.addEventListener('notifygov_profile_updated', handleUpdate);
+    return () => window.removeEventListener('notifygov_profile_updated', handleUpdate);
   }, []);
 
   const handleQuickMatch = (e: React.FormEvent) => {
@@ -182,9 +191,7 @@ export default function HomePage() {
       state: 'All India',
       targetExams: ['UPSC Civil Services', 'SSC CGL', 'RRB Junior Engineer'],
     };
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('notifygov_user_profile', JSON.stringify(profile));
-    }
+    saveProfile(profile);
     router.push('/notifications');
   };
 

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { getSavedProfile, CandidateProfile } from '@/lib/profile';
 
 export type AlertType = 'eligible' | 'target' | 'admit_card' | 'result' | 'corrigendum';
 
@@ -161,18 +162,14 @@ export default function NotificationsPage() {
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
   const [candidateProfile, setCandidateProfile] = useState<any>(null);
 
-  // Load candidate profile from localStorage if available
+  // Load candidate profile from localStorage / persistent cookie
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('notifygov_user_profile');
-      if (stored) {
-        try {
-          setCandidateProfile(JSON.parse(stored));
-        } catch {
-          // Ignore parse errors
-        }
-      }
-    }
+    setCandidateProfile(getSavedProfile());
+    const handleUpdate = () => {
+      setCandidateProfile(getSavedProfile());
+    };
+    window.addEventListener('notifygov_profile_updated', handleUpdate);
+    return () => window.removeEventListener('notifygov_profile_updated', handleUpdate);
   }, []);
 
   const markAllRead = () => {

@@ -1,31 +1,37 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getSavedProfile, CandidateProfile } from '@/lib/profile';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [savedProfile, setSavedProfile] = useState<CandidateProfile | null>(null);
+
+  useEffect(() => {
+    setSavedProfile(getSavedProfile());
+  }, []);
 
   const handleGoogleLogin = async () => {
+    if (!isSupabaseConfigured || !supabase) {
+      setErrorMsg('Cloud authentication requires Supabase environment variables in Vercel. You can continue as a Guest — your profile is already saved on this device!');
+      return;
+    }
+
     setLoading(true);
     setErrorMsg('');
     try {
-      if (supabase) {
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: `${window.location.origin}/onboarding`,
-          },
-        });
-        if (error) throw error;
-      } else {
-        // Mock fallback if Supabase keys not added yet
-        window.location.href = '/onboarding';
-      }
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/notifications`,
+        },
+      });
+      if (error) throw error;
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to authenticate with Google');
       setLoading(false);
@@ -36,18 +42,21 @@ export default function LoginPage() {
     e.preventDefault();
     if (!email) return;
 
+    if (!isSupabaseConfigured || !supabase) {
+      setErrorMsg('Email magic link requires Supabase configured. Your candidate profile is safely preserved locally without an account!');
+      return;
+    }
+
     setLoading(true);
     setErrorMsg('');
     try {
-      if (supabase) {
-        const { error } = await supabase.auth.signInWithOtp({
-          email,
-          options: {
-            emailRedirectTo: `${window.location.origin}/onboarding`,
-          },
-        });
-        if (error) throw error;
-      }
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/notifications`,
+        },
+      });
+      if (error) throw error;
       setSent(true);
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to send login link');
@@ -89,12 +98,76 @@ export default function LoginPage() {
           </div>
 
           <h1 style={{ fontSize: '1.6rem', fontWeight: 700, color: '#f8fafc', marginBottom: '0.4rem', letterSpacing: '-0.02em' }}>
-            Welcome to Notify<span style={{ color: '#f59e0b' }}>Gov</span>
+            Candidate Account &amp; Sync
           </h1>
           <p style={{ fontSize: '0.88rem', color: '#94a3b8', lineHeight: 1.5 }}>
-            Sign in to get personalized government job notifications matching your degree &amp; age.
+            Access personalized recruitment circulars and save alert preferences.
           </p>
         </div>
+
+        {/* Existing Profile on Device Banner */}
+        {savedProfile && (
+          <div
+            style={{
+              background: 'rgba(16, 185, 129, 0.08)',
+              border: '1px solid rgba(16, 185, 129, 0.28)',
+              borderRadius: '12px',
+              padding: '1rem',
+              marginBottom: '1.5rem',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.35rem' }}>
+              <span className="dot-live" />
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#34d399', textTransform: 'uppercase' }}>
+                Profile Active On This Device
+              </span>
+            </div>
+            <p style={{ fontSize: '0.86rem', color: '#f8fafc', fontWeight: 600, margin: '0 0 4px 0' }}>
+              {savedProfile.qualification} ({savedProfile.discipline})
+            </p>
+            <p style={{ fontSize: '0.78rem', color: '#94a3b8', margin: '0 0 10px 0' }}>
+              Age {savedProfile.age} • {savedProfile.category} • {savedProfile.targetExams?.length || 0} target exams
+            </p>
+            <Link
+              href="/notifications"
+              className="btn-primary"
+              style={{ width: '100%', fontSize: '0.84rem', padding: '0.5rem', boxSizing: 'border-box', textAlign: 'center' }}
+            >
+              Go Directly to My Eligible Matches &rarr;
+            </Link>
+          </div>
+        )}
+
+        {/* If Supabase is not configured, show clear friendly status */}
+        {!isSupabaseConfigured && (
+          <div
+            style={{
+              background: 'rgba(59, 130, 246, 0.08)',
+              border: '1px solid rgba(59, 130, 246, 0.22)',
+              borderRadius: '12px',
+              padding: '1rem',
+              marginBottom: '1.5rem',
+              fontSize: '0.84rem',
+              color: '#cbd5e1',
+              lineHeight: 1.5,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#60a5fa', fontWeight: 700, marginBottom: '0.35rem' }}>
+              <span>⚡ Free Offline Guest Mode Active</span>
+            </div>
+            <p style={{ margin: '0 0 8px 0' }}>
+              You don&apos;t need an account to use NotifyGov! Your candidate qualifications and filters are saved permanently in your browser and phone cookies.
+            </p>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <Link href="/onboarding" className="btn-secondary" style={{ fontSize: '0.78rem', padding: '0.4rem 0.85rem' }}>
+                {savedProfile ? 'Modify Profile' : 'Set Profile Now'}
+              </Link>
+              <Link href="/notifications" className="btn-outline" style={{ fontSize: '0.78rem', padding: '0.4rem 0.85rem' }}>
+                Browse Alerts
+              </Link>
+            </div>
+          </div>
+        )}
 
         {errorMsg && (
           <div
@@ -255,7 +328,7 @@ export default function LoginPage() {
         {/* Security & trust footer note */}
         <div style={{ textAlign: 'center', marginTop: '1.75rem', borderTop: '1px solid rgba(255, 255, 255, 0.05)', paddingTop: '1.25rem' }}>
           <p style={{ fontSize: '0.75rem', color: '#64748b', margin: 0, lineHeight: 1.5 }}>
-            No password required. By continuing, you agree to NotifyGov&apos;s Terms of Service and Privacy Policy. 100% free public service.
+            No password required. 100% free public service for students and aspirants.
           </p>
         </div>
       </div>
